@@ -5,35 +5,40 @@ import 'package:args/src/usage.dart';
 import 'package:args/args.dart';
 
 void main(args) {
-  var parser = new ArgParser()..addCommand('setChannel')..addCommand('setInfo')..addCommand('getInfo');
+  var parser = new ArgParser.allowAnything();
   //  BuildApk buildApk = BuildApk()..build();
   var results = parser.parse(args);
 
-  if (results.command?.name == null) {
+  if (results.arguments.length == 0) {
     print(Usage([
       'setChannel        编译apk并写入渠道号 flutter pub run flutter_walle_plugin setChannel flutter build apk',
       'setInfo           编译apk并写入渠道信息 flutter pub run flutter_walle_plugin setInfo flutter build apk',
       'getInfo           查看指定apk文件渠道信息 flutter pub run flutter_walle_plugin getInfo /Users/hjc1/Documents/flutter/money_answer/channelApks/app-release_huawei.apk'
     ], lineLength: 5)
         .generate());
-  } else {
-    var build = BuildApk();
-    List<String> list = [...results.command.arguments];
-    list.remove('flutter');
-    if (results.command?.name == 'setChannel') {
-      print(results.command.arguments);
-      build.build(list);
-    } else if (results.command?.name == 'setInfo') {
-      build.build(list, isSetInfo: true);
-    } else if (results.command?.name == 'getInfo') {
-      if (results.command?.arguments?.first == null) {
-        throw ArgumentError('没有apk文件路径，需要完整路径');
-      }
-      build.getApkInfo(results.command?.arguments?.first);
-    } else {
-      throw ArgumentError('没有选择命令');
-    }
+    return;
   }
+
+  final command = results.arguments[0];
+  final arguments = results.arguments.sublist(1);
+  print('command: $command, arguments: $arguments');
+
+  var build = BuildApk();
+  List<String> list = [...arguments];
+  list.remove('flutter');
+  if (command == 'setChannel') {
+    build.build(list);
+  } else if (command == 'setInfo') {
+    build.build(list, isSetInfo: true);
+  } else if (command == 'getInfo') {
+    if (arguments.first == null) {
+      throw ArgumentError('没有apk文件路径，需要完整路径');
+    }
+    build.getApkInfo(arguments.first);
+  } else {
+    throw ArgumentError('没有选择命令');
+  }
+
 }
 
 class BuildApk {
