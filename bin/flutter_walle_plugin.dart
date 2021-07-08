@@ -10,12 +10,11 @@ void main(args) {
   var results = parser.parse(args);
 
   if (results.arguments.length == 0) {
-    print(Usage([
+    print(generateUsage([
       'setChannel        编译apk并写入渠道号 flutter pub run flutter_walle_plugin setChannel flutter build apk',
       'setInfo           编译apk并写入渠道信息 flutter pub run flutter_walle_plugin setInfo flutter build apk',
       'getInfo           查看指定apk文件渠道信息 flutter pub run flutter_walle_plugin getInfo /Users/hjc1/Documents/flutter/money_answer/channelApks/app-release_huawei.apk'
-    ], lineLength: 5)
-        .generate());
+    ], lineLength: 5));
     return;
   }
 
@@ -38,7 +37,6 @@ void main(args) {
   } else {
     throw ArgumentError('没有选择命令');
   }
-
 }
 
 class BuildApk {
@@ -46,7 +44,7 @@ class BuildApk {
   String dirName = path.context.current;
 
   /// jar文件路径
-  String jarFilePath;
+  String? jarFilePath;
 
   BuildApk() {
     var pluginPath = path.join(dirName, '.flutter-plugins');
@@ -85,7 +83,7 @@ class BuildApk {
   }
 
   /// 写入渠道信息
-  setChannel({List<String> args, bool isSetInfo = false}) {
+  setChannel({List<String?>? args, bool isSetInfo = false}) {
     print('----------------------------写入渠道----------------------------');
 
     args ??= isSetInfo
@@ -125,7 +123,7 @@ class BuildApk {
     }
 
     Process.run('java', [
-      ...args,
+      ...args as Iterable<String>,
       channelFilePath,
       path.join(dirName, newApkFileName)
     ]).then((ProcessResult result) {
@@ -136,7 +134,7 @@ class BuildApk {
 
   /// 查看apk的渠道信息
   getApkInfo(String apkFilePath) {
-    Process.run('java', ['-jar', jarFilePath, 'show', apkFilePath])
+    Process.run('java', ['-jar', jarFilePath!, 'show', apkFilePath])
         .then((ProcessResult result) {
       print('result----${result.stdout}');
       print('result----${result.stderr}');
