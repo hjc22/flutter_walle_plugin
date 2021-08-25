@@ -47,10 +47,10 @@ class BuildApk {
   String? jarFilePath;
 
   BuildApk() {
-    var pluginPath = path.join(dirName, '.flutter-plugins');
+    String pluginPath = path.join(dirName, '.flutter-plugins');
     pluginPath = File(pluginPath)
         .readAsLinesSync()
-        ?.firstWhere((String item) => item.contains('flutter_walle_plugin'));
+        .firstWhere((String item) => item.contains('flutter_walle_plugin'));
 
     if (pluginPath != null) {
       jarFilePath =
@@ -60,35 +60,31 @@ class BuildApk {
 
   /// 打包flutter 为apk
   build(List<String> args, {bool isSetInfo = false}) async {
-    print('----------------------------编译开始----------------------------');
-    Process.start('flutter', args).then((Process result) {
-      result.stdout.transform(utf8.decoder).listen((data) {
-        print(data);
-      });
-      bool isErr = false;
-      result.stderr.transform(utf8.decoder).listen((data) {
-        print(data);
-        isErr = true;
-      });
+    print('----------------------------START----------------------------');
+    final progress = await Process.start('flutter', args);
+    progress.stdout.transform(utf8.decoder).listen((data) {
+      print('----------------------------Building----------------------------');
+      print(data);
+    });
 
-      result.exitCode.then((exitCode) {
-        if (!isErr) {
-          print('----------------------------编译成功----------------------------');
-          setChannel(isSetInfo: isSetInfo);
-        } else {
-          print('----------------------------编译失败----------------------------');
-        }
-      });
+    progress.stderr.transform(utf8.decoder).listen((data) {
+      print('----------------------------Warning----------------------------');
+      print(data);
+    });
+
+    progress.exitCode.then((exitCode) {
+      print('----------------------------Exit----------------------------');
+      setChannel(isSetInfo: isSetInfo);
     });
   }
 
   /// 写入渠道信息
-  setChannel({List<String?>? args, bool isSetInfo = false}) {
-    print('----------------------------写入渠道----------------------------');
+  setChannel({List<String>? args, bool isSetInfo = false}) {
+    print('----------------------------SetChannelInfo----------------------------');
 
     args ??= isSetInfo
-        ? ['-jar', jarFilePath, 'batch2', '-f']
-        : ['-jar', jarFilePath, 'batch', '-f'];
+        ? ['-jar', jarFilePath ?? '', 'batch2', '-f']
+        : ['-jar', jarFilePath ?? '', 'batch', '-f'];
 
     var channelFilePath = isSetInfo
         ? path.join(dirName, 'channelInfo.json')
@@ -123,12 +119,11 @@ class BuildApk {
     }
 
     Process.run('java', [
-      ...args as Iterable<String>,
+      ...args ,
       channelFilePath,
       path.join(dirName, newApkFileName)
     ]).then((ProcessResult result) {
-      print('result----${result.stdout}');
-      print('result----${result.stderr}');
+      print('----------------------------Success----------------------------');
     });
   }
 
